@@ -8,10 +8,10 @@ struct stat file_stat;
 struct tosfs_superblock *sb;
 struct  tosfs_inode *inodes;
 
-static int getattr_3is(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi){
+static void getattr_3is(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi __attribute__((unused))){
     struct stat stbuf = {0};
     if (ino ==0){
-        return -1;
+        return;
     }
     stbuf.st_ino = ino;
     stbuf.st_uid = inodes[ino].uid;
@@ -22,15 +22,16 @@ static int getattr_3is(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi
     stbuf.st_blksize = sb->block_size;
     stbuf.st_blocks = inodes[ino].size / sb->block_size;
     fuse_reply_attr(req, &stbuf, 1.0);
-    return 0;
 }
 
-static void lookup_3is(fuse_req_t req, fuse_ino_t parent, const char *name)
-{
-
+static void lookup_3is(fuse_req_t req, fuse_ino_t parent, const char *name){
+    // check if parent is a directory
+    if (inodes[parent].mode != S_IFDIR) {
+        fuse_reply_err(req, ENOTDIR);
+    }
 }
 
-static void readdir_3is(fuse_req_t req, fuse_ino_t ino, size_t size,
+/*static void readdir_3is(fuse_req_t req, fuse_ino_t ino, size_t size,
                         off_t off, struct fuse_file_info *fi)
 {
 
@@ -46,14 +47,14 @@ static void read_3is(fuse_req_t req, fuse_ino_t ino, size_t size,
                      off_t off, struct fuse_file_info *fi)
 {
 
-}
+}*/
 
 static struct fuse_lowlevel_ops oper = {
     .getattr	= getattr_3is,
-    .lookup		= lookup_3is,
+    /*.lookup		= lookup_3is,
     .readdir	= readdir_3is,
     .open		= open_3is,
-    .read		= read_3is,
+    .read		= read_3is,*/
 };
 
 
@@ -98,7 +99,7 @@ int main(int argc, char * argv[])
 
     inodes = file_in_memory + TOSFS_BLOCK_SIZE * TOSFS_INODE_BLOCK;
     printf("\n--- Inodes ---\n");
-    for (int i = 1; i < sb->inodes+1; i++) { // skip the first inode because it's root inode, it's empty
+    for (unsigned int i = 1; i < sb->inodes+1; i++) { // skip the first inode because it's root inode, it's empty
         printf("Inode %d: inode number = %u, block_no = %u, uid = %u, gid = %u, mode = %u, perm = %u, size = %u bytes, nlink = %u\n",
                i,
                inodes[i].inode,
@@ -112,7 +113,7 @@ int main(int argc, char * argv[])
     }
 
 
-    /*struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
     struct fuse_chan *ch;
     char *mountpoint;
     int err = -1;
@@ -121,7 +122,7 @@ int main(int argc, char * argv[])
         (ch = fuse_mount(mountpoint, &args)) != NULL) {
         struct fuse_session *se;
 
-        se = fuse_lowlevel_new(&args, &oper,
+        se = fuse_lowlevel_new_compat(NULL, &oper,
                        sizeof(oper), NULL);
         if (se != NULL) {
             if (fuse_set_signal_handlers(se) != -1) {
@@ -136,6 +137,6 @@ int main(int argc, char * argv[])
         }
     fuse_opt_free_args(&args);
 
-    return err ? 1 : 0;*/
+    return err ? 1 : 0;
     return 0;
 }
