@@ -17,4 +17,10 @@
 #include <fcntl.h>
 #include <assert.h>
 
+void getattr_3is(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
+void readdir_3is(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off, struct fuse_file_info *fi);
+void lookup_3is(fuse_req_t req, fuse_ino_t parent, const char *name);
+void read_3is(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off, struct fuse_file_info *fi);
+
+
 #endif //MAIN_H

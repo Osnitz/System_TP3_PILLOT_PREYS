@@ -17,7 +17,6 @@ static void getattr_3is(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *f
         fuse_reply_err(req, ENOENT);
         return;
     }
-
     stbuf.st_ino = ino;
     stbuf.st_uid = inodes[ino].uid;
     stbuf.st_gid = inodes[ino].gid;
@@ -97,7 +96,6 @@ static void readdir_3is(fuse_req_t req, fuse_ino_t ino, size_t size,
 
     fuse_reply_buf(req, buffer, total_size);
 }
-
 
 
 static void read_3is(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off, struct fuse_file_info *fi) {
